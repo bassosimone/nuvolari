@@ -30,6 +30,7 @@ func (dl DownloadHandler) Handle(writer http.ResponseWriter, request *http.Reque
 		if s != "" {
 			value, err := strconv.Atoi(s)
 			if err != nil || value < 0 || value > maxDuration {
+				log.Warn("The duration option has an invalid value")
 				writer.Header().Set("Connection", "Close")
 				writer.WriteHeader(http.StatusBadRequest)
 				return
@@ -38,6 +39,12 @@ func (dl DownloadHandler) Handle(writer http.ResponseWriter, request *http.Reque
 		}
 	}
 	log.Debug("Upgrading to WebSockets")
+	if request.Header.Get("Sec-WebSocket-Protocol") != SecWebSocketProtocol {
+		log.Warn("Missing Sec-WebSocket-Protocol in request")
+		writer.Header().Set("Connection", "Close")
+		writer.WriteHeader(http.StatusBadRequest)
+		return
+	}
 	headers := http.Header{}
 	headers.Add("Sec-WebSocket-Protocol", SecWebSocketProtocol)
 	conn, err := dl.Upgrader.Upgrade(writer, request, headers)
