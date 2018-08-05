@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>NDT7 Browser Client</title>
+</head>
+<body>
+  <button onclick="Run()">Run</button>
+  <script>
+
+    function Run() {
+      let count = 0
+      let t0 = new Date().getTime()
+      let tlast = t0
+      const url = (((window.location.protocol === 'https:')
+        ? 'wss://' : 'ws://') + window.location.host + '/ndt/v7/download'
+        + '?duration=4')
+      const socket = new WebSocket(url, "net.measurementlab.ndt.v7")
+      socket.addEventListener('message', function (event) {
+        if (event.data instanceof Blob) {
+          count += event.data.size
+        } else {
+          console.log('Measurement from server: ' + event.data)
+          count += event.data.length
+        }
+        let t1 = new Date().getTime()
+        if (t1 - tlast > 250) {
+          console.log('Measurement from us: ' + JSON.stringify({
+            elapsed: (t1 - t0) * 1000 * 1000,
+            num_bytes: count,
+          }))
+          tlast = t1
+        }
+      })
+    }
+
+  </script>
+</body>
+</html>

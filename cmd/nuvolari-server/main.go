@@ -14,6 +14,8 @@ func main() {
 	flag.Parse()
 	dl := nuvolari.DownloadHandler{}
 	http.HandleFunc(nuvolari.DownloadURLPath, dl.Handle)
+	fs := http.FileServer(http.Dir("static"))
+	http.Handle("/", fs)
 	err := http.ListenAndServe(*address, nil)
 	if err != nil {
 		log.WithError(err).Fatal("http.ListenAndServe() failed")
