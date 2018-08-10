@@ -11,13 +11,14 @@ import (
 
 	"github.com/apex/log"
 	"github.com/gorilla/websocket"
+	"github.com/m-lab/ndt-cloud/ndt7"
 )
 
 // Settings contains client settings. All settings are optional except for
 // the Hostname, which cannot be autoconfigured at the moment.
 type Settings struct {
 	// This structure embeds options defined in the spec.
-	Options
+	ndt7.Options
 	// InsecureSkipTLSVerify can be used to disable certificate verification.
 	InsecureSkipTLSVerify bool
 	// InsecureNoTLS can be used to force using cleartext.
@@ -112,7 +113,7 @@ type LogRecord struct {
 
 // MeasurementRecord is the structure of a measurement event
 type MeasurementRecord struct {
-	Measurement      // The measurement
+	ndt7.Measurement      // The measurement
 	IsLocal     bool `json:"is_local"` // Whether it is a local measurement
 }
 
@@ -133,19 +134,19 @@ func (cl Client) Download(intrch chan interface{}) chan Event {
 		defer close(ch)
 		ch <- Event{Key: LogEvent, Value: LogRecord{Severity: LogInfo,
 			Message: "Creating a WebSocket connection"}}
-		cl.url.Path = DownloadURLPath
+		cl.url.Path = ndt7.DownloadURLPath
 		headers := http.Header{}
-		headers.Add("Sec-WebSocket-Protocol", SecWebSocketProtocol)
+		headers.Add("Sec-WebSocket-Protocol", ndt7.SecWebSocketProtocol)
 		conn, _, err := cl.dialer.Dial(cl.url.String(), headers)
 		if err != nil {
 			ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
 			return
 		}
-		conn.SetReadLimit(MinMaxMessageSize)
+		conn.SetReadLimit(ndt7.MinMaxMessageSize)
 		defer conn.Close()
 		ch <- Event{Key: LogEvent, Value: LogRecord{Severity: LogInfo,
 			Message: "Starting download"}}
-		ticker := time.NewTicker(MinMeasurementInterval)
+		ticker := time.NewTicker(ndt7.MinMeasurementInterval)
 		defer ticker.Stop()
 		t0 := time.Now()
 		count := int64(0)
@@ -153,7 +154,7 @@ func (cl Client) Download(intrch chan interface{}) chan Event {
 			select {
 			case t := <-ticker.C:
 				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
-					IsLocal: true, Measurement: Measurement{
+					IsLocal: true, Measurement: ndt7.Measurement{
 						Elapsed: t.Sub(t0).Nanoseconds(), NumBytes: count}}}
 			case <-intrch:
 				running = false
@@ -169,7 +170,7 @@ func (cl Client) Download(intrch chan interface{}) chan Event {
 				}
 				count += int64(len(mdata))
 				if mtype == websocket.TextMessage {
-					measurement := Measurement{}
+					measurement := ndt7.Measurement{}
 					err := json.Unmarshal(mdata, &measurement)
 					if err != nil {
 						ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
