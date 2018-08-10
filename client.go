@@ -25,7 +25,7 @@ type Client struct {
 	// for the download subtest). If the Query is empty we will send no
 	// query. To configure the maximum duration, you can add a "duration" value
 	// to the query string (see cmd/nuvolari-server/main.go).
-	URL    url.URL
+	URL url.URL
 }
 
 // EvKey uniquely identifies an event.
