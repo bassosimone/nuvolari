@@ -4,12 +4,12 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"runtime"
 	"syscall"
 
-	"github.com/apex/log"
 	"github.com/bassosimone/nuvolari"
 )
 
@@ -35,34 +35,21 @@ func main() {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
 			<-sigs
-			log.Warn("Got interrupt signal")
+			fmt.Println("Got interrupt signal")
 			cancel()
-			log.Warn("Delivered interrupt signal")
+			fmt.Println("Delivered interrupt signal")
 		}()
 	}
+	rv := 0
 	for ev := range clnt.Download(ctx) {
-		switch ev.Key {
-		case nuvolari.LogEvent:
-			r := ev.Value.(nuvolari.LogRecord)
-			switch r.Severity {
-			case nuvolari.LogWarning:
-				log.Warn(r.Message)
-			case nuvolari.LogInfo:
-				log.Info(r.Message)
-			case nuvolari.LogDebug:
-				log.Debug(r.Message)
-			}
-		case nuvolari.MeasurementEvent:
-			r := ev.Value.(nuvolari.MeasurementRecord)
-			s, e := json.Marshal(r)
-			if e != nil {
-				panic("Cannot serialize simple JSON")
-			}
-			log.Infof("Got a measurement: %s", s)
-		case nuvolari.FailureEvent:
-			r := ev.Value.(nuvolari.FailureRecord)
-			log.WithError(r.Err).Warn("Download did not complete cleanly")
-			os.Exit(1)
+		if ev.Key == nuvolari.FailureEvent {
+			rv = 1  // if we have seen an error be prepared to os.Exit(1)
 		}
+		data, err := json.Marshal(ev)
+		if err != nil {
+			panic("Cannot serialize event as JSON")
+		}
+		fmt.Println(string(data))
 	}
+	os.Exit(rv)
 }

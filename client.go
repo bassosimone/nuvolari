@@ -10,7 +10,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/apex/log"
 	"github.com/gorilla/websocket"
 	"github.com/m-lab/ndt-cloud/ndt7"
 )
@@ -42,10 +41,8 @@ func NewClient(settings Settings) Client {
 	if settings.InsecureSkipTLSVerify {
 		config := tls.Config{InsecureSkipVerify: true}
 		cl.dialer.TLSClientConfig = &config
-		log.Warn("Disabling TLS cerificate verification (INSECURE!)")
 	}
 	if settings.InsecureNoTLS {
-		log.Warn("Using plain text WebSocket (INSECURE!)")
 		cl.url.Scheme = "ws"
 	} else {
 		cl.url.Scheme = "wss"
@@ -76,50 +73,50 @@ func NewClient(settings Settings) Client {
 }
 
 // EvKey uniquely identifies an event.
-type EvKey int
+type EvKey string
 
 const (
 	// LogEvent indicates an event containing a log message
-	LogEvent = EvKey(iota)
+	LogEvent = EvKey("log")
 	// MeasurementEvent indicates an event containing some measurements
-	MeasurementEvent
+	MeasurementEvent = EvKey("ndt7.measurement")
 	// FailureEvent indicates an event containing an error
-	FailureEvent
+	FailureEvent = EvKey("measurement.failure")
 )
 
 // Event is the structure of a generic event
 type Event struct {
-	Key   EvKey       // Tells you the kind of the event
-	Value interface{} // Opaque event value
+	Key   EvKey       `json:"key"`   // Tells you the kind of the event
+	Value interface{} `json:"value"` // Opaque event value
 }
 
-// Severity indicates the severity of a log message
-type Severity int
+// LogLevel indicates the severity of a log message
+type LogLevel string
 
 const (
 	// LogWarning indicates a warning message
-	LogWarning = Severity(iota)
+	LogWarning = LogLevel("warning")
 	// LogInfo indicates an informational message
-	LogInfo
+	LogInfo = LogLevel("info")
 	// LogDebug indicates a debug message
-	LogDebug
+	LogDebug = LogLevel("debug")
 )
 
 // LogRecord is the structure of a log event
 type LogRecord struct {
-	Severity Severity // Message severity
-	Message  string   // The message
+	LogLevel LogLevel `json:"log_level"` // Message severity
+	Message  string   `json:"message"`   // The message
 }
 
 // MeasurementRecord is the structure of a measurement event
 type MeasurementRecord struct {
 	ndt7.Measurement      // The measurement
-	IsLocal     bool `json:"is_local"` // Whether it is a local measurement
+	IsLocal          bool `json:"is_local"` // Whether it is a local measurement
 }
 
 // FailureRecord is the structure of a failure event
 type FailureRecord struct {
-	Err error // The error that occurred
+	Failure string `json:"failure"` // The error that occurred
 }
 
 // defaultTimeout is the default value of the I/O timeout.
@@ -131,7 +128,7 @@ func (cl Client) Download(ctx context.Context) chan Event {
 	ch := make(chan Event)
 	go func() {
 		defer close(ch)
-		ch <- Event{Key: LogEvent, Value: LogRecord{Severity: LogInfo,
+		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
 			Message: "Creating a WebSocket connection"}}
 		cl.url.Path = ndt7.DownloadURLPath
 		headers := http.Header{}
@@ -139,12 +136,12 @@ func (cl Client) Download(ctx context.Context) chan Event {
 		cl.dialer.HandshakeTimeout = defaultTimeout
 		conn, _, err := cl.dialer.Dial(cl.url.String(), headers)
 		if err != nil {
-			ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
+			ch <- Event{Key: FailureEvent, Value: FailureRecord{Failure: err.Error()}}
 			return
 		}
 		conn.SetReadLimit(ndt7.MinMaxMessageSize)
 		defer conn.Close()
-		ch <- Event{Key: LogEvent, Value: LogRecord{Severity: LogInfo,
+		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
 			Message: "Starting download"}}
 		ticker := time.NewTicker(ndt7.MinMeasurementInterval)
 		defer ticker.Stop()
@@ -164,7 +161,8 @@ func (cl Client) Download(ctx context.Context) chan Event {
 				mtype, mdata, err := conn.ReadMessage()
 				if err != nil {
 					if !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-						ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
+						ch <- Event{Key: FailureEvent, Value: FailureRecord{
+							Failure: err.Error()}}
 					}
 					return
 				}
@@ -173,7 +171,8 @@ func (cl Client) Download(ctx context.Context) chan Event {
 					measurement := ndt7.Measurement{}
 					err := json.Unmarshal(mdata, &measurement)
 					if err != nil {
-						ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
+						ch <- Event{Key: FailureEvent, Value: FailureRecord{
+							Failure: err.Error()}}
 						return
 					}
 					ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
@@ -181,6 +180,8 @@ func (cl Client) Download(ctx context.Context) chan Event {
 				}
 			}
 		}
+		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
+			Message: "Download complete"}}
 	}()
 	return ch
 }
