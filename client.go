@@ -157,7 +157,7 @@ func (cl Client) Download(ctx context.Context) chan Event {
 		defer ticker.Stop()
 		t0 := time.Now()
 		count := int64(0)
-		for running := true; running; {
+		for {
 			select {
 			case t := <-ticker.C:
 				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
@@ -167,29 +167,28 @@ func (cl Client) Download(ctx context.Context) chan Event {
 				ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogWarning,
 					Message: "Download interrupted by user"}}
 				return
-			default: // None of the above, receive more data
-				conn.SetReadDeadline(time.Now().Add(defaultTimeout))
-				mtype, mdata, err := conn.ReadMessage()
+			default: // None of the above, fallthrough
+			}
+			conn.SetReadDeadline(time.Now().Add(defaultTimeout))
+			mtype, mdata, err := conn.ReadMessage()
+			if err != nil {
+				if !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
+					ch <- Event{Key: FailureEvent, Value: FailureRecord{
+						Failure: err.Error()}}
+				}
+				break
+			}
+			count += int64(len(mdata))
+			if mtype == websocket.TextMessage {
+				measurement := ndt7.Measurement{}
+				err := json.Unmarshal(mdata, &measurement)
 				if err != nil {
-					if !websocket.IsCloseError(err, websocket.CloseNormalClosure) {
-						ch <- Event{Key: FailureEvent, Value: FailureRecord{
-							Failure: err.Error()}}
-					}
-					running = false
-					continue
+					ch <- Event{Key: FailureEvent, Value: FailureRecord{
+						Failure: err.Error()}}
+					return
 				}
-				count += int64(len(mdata))
-				if mtype == websocket.TextMessage {
-					measurement := ndt7.Measurement{}
-					err := json.Unmarshal(mdata, &measurement)
-					if err != nil {
-						ch <- Event{Key: FailureEvent, Value: FailureRecord{
-							Failure: err.Error()}}
-						return
-					}
-					ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
-						IsLocal: false, Measurement: measurement}}
-				}
+				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
+					IsLocal: false, Measurement: measurement}}
 			}
 		}
 		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
