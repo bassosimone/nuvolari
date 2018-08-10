@@ -1,3 +1,4 @@
+// Package nuvolari implements a NDTv7 client.
 package nuvolari
 
 import (
