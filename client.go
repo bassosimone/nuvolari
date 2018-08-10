@@ -176,6 +176,7 @@ func (cl Client) Download(ctx context.Context) chan Event {
 							Failure: err.Error()}}
 					}
 					running = false
+					continue
 				}
 				count += int64(len(mdata))
 				if mtype == websocket.TextMessage {
