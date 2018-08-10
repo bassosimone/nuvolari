@@ -3,74 +3,29 @@ package nuvolari
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
-	"net"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/m-lab/ndt-cloud/ndt7"
 )
 
-// Settings contains client settings. All settings are optional except for
-// the Hostname, which cannot be autoconfigured at the moment.
-type Settings struct {
-	// This structure embeds options defined in the spec.
-	ndt7.Options
-	// InsecureSkipTLSVerify can be used to disable certificate verification.
-	InsecureSkipTLSVerify bool
-	// InsecureNoTLS can be used to force using cleartext.
-	InsecureNoTLS bool
-	// Hostname is the hostname of the NDT7 server to connect to.
-	Hostname string
-	// Port is the port of the NDT7 server to connect to.
-	Port string
-}
-
 // Client is a NDT7 client.
 type Client struct {
-	dialer websocket.Dialer
-	url    url.URL
-}
+	// Dialer is a WebSocket dialer. The default configuration should be good
+	// in most cases. However, for testing purposes you MAY want to disable
+	// TLS certificate verification by setting a custom TSLClientConfig field.
+	Dialer websocket.Dialer
 
-// NewClient creates a new client.
-func NewClient(settings Settings) Client {
-	cl := Client{}
-	if settings.InsecureSkipTLSVerify {
-		config := tls.Config{InsecureSkipVerify: true}
-		cl.dialer.TLSClientConfig = &config
-	}
-	if settings.InsecureNoTLS {
-		cl.url.Scheme = "ws"
-	} else {
-		cl.url.Scheme = "wss"
-	}
-	if settings.Port != "" {
-		ip := net.ParseIP(settings.Hostname)
-		if ip == nil || len(ip) == 4 {
-			cl.url.Host = settings.Hostname
-			cl.url.Host += ":"
-			cl.url.Host += settings.Port
-		} else if len(ip) == 16 {
-			cl.url.Host = "["
-			cl.url.Host += settings.Hostname
-			cl.url.Host += "]:"
-			cl.url.Host += settings.Port
-		} else {
-			panic("IP address that is neither 4 nor 16 bytes long")
-		}
-	} else {
-		cl.url.Host = settings.Hostname
-	}
-	query := cl.url.Query()
-	if settings.Duration > 0 {
-		query.Add("duration", strconv.Itoa(settings.Duration))
-	}
-	cl.url.RawQuery = query.Encode()
-	return cl
+	// URL is the URL to use. The only required field is Host. If the Scheme
+	// is empty, we will use "wss". If the Path is empty, we will use
+	// the canonical path for the selected subtest (e.g. "/ndt/v7/download"
+	// for the download subtest). If the Query is empty we will send no
+	// query. To configure the maximum duration, you can add a "duration" value
+	// to the query string (see cmd/nuvolari-server/main.go).
+	URL    url.URL
 }
 
 // EvKey uniquely identifies an event.
@@ -129,13 +84,18 @@ func (cl Client) Download(ctx context.Context) chan Event {
 	ch := make(chan Event)
 	go func() {
 		defer close(ch)
-		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
-			Message: "Creating a WebSocket connection"}}
-		cl.url.Path = ndt7.DownloadURLPath
+		if cl.URL.Scheme == "" {
+			cl.URL.Scheme = "wss"
+		}
+		if cl.URL.Path == "" {
+			cl.URL.Path = ndt7.DownloadURLPath
+		}
 		headers := http.Header{}
 		headers.Add("Sec-WebSocket-Protocol", ndt7.SecWebSocketProtocol)
-		cl.dialer.HandshakeTimeout = defaultTimeout
-		conn, _, err := cl.dialer.Dial(cl.url.String(), headers)
+		cl.Dialer.HandshakeTimeout = defaultTimeout
+		ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogInfo,
+			Message: "Creating a WebSocket connection to: " + cl.URL.String()}}
+		conn, _, err := cl.Dialer.Dial(cl.URL.String(), headers)
 		if err != nil {
 			ch <- Event{Key: FailureEvent, Value: FailureRecord{Failure: err.Error()}}
 			return
