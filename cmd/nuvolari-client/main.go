@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"flag"
 	"os"
@@ -27,8 +28,7 @@ func main() {
 	settings.Port = *port
 	settings.Duration = *duration
 	clnt := nuvolari.NewClient(settings)
-	ch := make(chan interface{}, 1)
-	defer close(ch)
+	ctx, cancel := context.WithCancel(context.Background())
 	sigs := make(chan os.Signal, 1)
 	defer close(sigs)
 	if runtime.GOOS != "windows" {
@@ -36,11 +36,11 @@ func main() {
 		go func() {
 			<-sigs
 			log.Warn("Got interrupt signal")
-			ch <- false
+			cancel()
 			log.Warn("Delivered interrupt signal")
 		}()
 	}
-	for ev := range clnt.Download(ch) {
+	for ev := range clnt.Download(ctx) {
 		switch ev.Key {
 		case nuvolari.LogEvent:
 			r := ev.Value.(nuvolari.LogRecord)

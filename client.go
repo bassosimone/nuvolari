@@ -1,6 +1,7 @@
 package nuvolari
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"net"
@@ -38,7 +39,6 @@ type Client struct {
 // NewClient creates a new client.
 func NewClient(settings Settings) Client {
 	cl := Client{}
-	cl.dialer.HandshakeTimeout = defaultTimeout
 	if settings.InsecureSkipTLSVerify {
 		config := tls.Config{InsecureSkipVerify: true}
 		cl.dialer.TLSClientConfig = &config
@@ -125,10 +125,9 @@ type FailureRecord struct {
 // defaultTimeout is the default value of the I/O timeout.
 const defaultTimeout = 1 * time.Second
 
-// Download runs a NDT7 download test. The |intrch| channel, if not nil, can
-// be used to interrupt the download test. Events occurring during the test
-// lifecycle will be emitted on the returned channel.
-func (cl Client) Download(intrch chan interface{}) chan Event {
+// Download runs a NDT7 download test. The |ctx| context allows the caller
+// to interrupt the download early by cancelling the context.
+func (cl Client) Download(ctx context.Context) chan Event {
 	ch := make(chan Event)
 	go func() {
 		defer close(ch)
@@ -137,6 +136,7 @@ func (cl Client) Download(intrch chan interface{}) chan Event {
 		cl.url.Path = ndt7.DownloadURLPath
 		headers := http.Header{}
 		headers.Add("Sec-WebSocket-Protocol", ndt7.SecWebSocketProtocol)
+		cl.dialer.HandshakeTimeout = defaultTimeout
 		conn, _, err := cl.dialer.Dial(cl.url.String(), headers)
 		if err != nil {
 			ch <- Event{Key: FailureEvent, Value: FailureRecord{Err: err}}
@@ -156,7 +156,7 @@ func (cl Client) Download(intrch chan interface{}) chan Event {
 				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
 					IsLocal: true, Measurement: ndt7.Measurement{
 						Elapsed: t.Sub(t0).Nanoseconds(), NumBytes: count}}}
-			case <-intrch:
+			case <-ctx.Done():
 				running = false
 				break
 			default: // None of the above, receive more data
