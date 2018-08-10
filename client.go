@@ -3,14 +3,28 @@ package nuvolari
 
 import (
 	"context"
+	"crypto/tls"
 	"encoding/json"
+	"errors"
+	"net"
 	"net/http"
 	"net/url"
+	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
 	"github.com/m-lab/ndt-cloud/ndt7"
 )
+
+// Settings contains the NDT7 Client settings. This structure is serializable
+// to JSON and allows to configure a Client from bindings.
+type Settings struct {
+	DisableTLS    bool   `json:"disable_tls"`     // Whether to disable TLS
+	SkipTLSVerify bool   `json:"skip_tls_verify"` // Whether to skip TLS verification
+	Hostname      string `json:"hostname"`        // Mandatory hostname
+	Port          string `json:"port"`            // Optional port
+	Duration      int    `json:"duration"`        // Optional duration (seconds)
+}
 
 // Client is a NDT7 client.
 type Client struct {
@@ -26,6 +40,41 @@ type Client struct {
 	// query. To configure the maximum duration, you can add a "duration" value
 	// to the query string (see cmd/nuvolari-server/main.go).
 	URL url.URL
+}
+
+// NewClient creates a new client given specific |settings|.
+func NewClient(settings Settings) (Client, error) {
+	clnt := Client{}
+	if settings.DisableTLS {
+		clnt.URL.Scheme = "ws"
+	}
+	if settings.SkipTLSVerify {
+		config := tls.Config{InsecureSkipVerify: true}
+		clnt.Dialer.TLSClientConfig = &config
+	}
+	if settings.Port != "" {
+		ip := net.ParseIP(settings.Hostname)
+		if ip == nil || ip.To4() != nil {
+			clnt.URL.Host = settings.Hostname
+			clnt.URL.Host += ":"
+			clnt.URL.Host += settings.Port
+		} else if ip.To16() != nil {
+			clnt.URL.Host = "["
+			clnt.URL.Host += settings.Hostname
+			clnt.URL.Host += "]:"
+			clnt.URL.Host += settings.Port
+		} else {
+			return Client{}, errors.New("You passed me a weird settings.Hostname")
+		}
+	} else {
+		clnt.URL.Host = settings.Hostname
+	}
+	if settings.Duration > 0 {
+		query := clnt.URL.Query()
+		query.Add("duration", strconv.Itoa(settings.Duration))
+		clnt.URL.RawQuery = query.Encode()
+	}
+	return clnt, nil
 }
 
 // EvKey uniquely identifies an event.

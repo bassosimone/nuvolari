@@ -2,15 +2,13 @@ package main
 
 import (
 	"context"
-	"crypto/tls"
 	"encoding/json"
 	"flag"
 	"fmt"
-	"net"
+	"log"
 	"os"
 	"os/signal"
 	"runtime"
-	"strconv"
 	"syscall"
 
 	"github.com/bassosimone/nuvolari"
@@ -24,35 +22,15 @@ var skipTLSVerify = flag.Bool("skip-tls-verify", false, "Skip TLS verify")
 
 func main() {
 	flag.Parse()
-	clnt := nuvolari.Client{}
-	if *skipTLSVerify {
-		config := tls.Config{InsecureSkipVerify: true}
-		clnt.Dialer.TLSClientConfig = &config
-	}
-	if *disableTLS {
-		clnt.URL.Scheme = "ws"
-	}
-	if *port != "" {
-		ip := net.ParseIP(*hostname)
-		if ip == nil || len(ip) == 4 {
-			clnt.URL.Host = *hostname
-			clnt.URL.Host += ":"
-			clnt.URL.Host += *port
-		} else if len(ip) == 16 {
-			clnt.URL.Host = "["
-			clnt.URL.Host += *hostname
-			clnt.URL.Host += "]:"
-			clnt.URL.Host += *port
-		} else {
-			panic("IP address that is neither 4 nor 16 bytes long")
-		}
-	} else {
-		clnt.URL.Host = *hostname
-	}
-	if *duration > 0 {
-		query := clnt.URL.Query()
-		query.Add("duration", strconv.Itoa(*duration))
-		clnt.URL.RawQuery = query.Encode()
+	settings := nuvolari.Settings{}
+	settings.DisableTLS = *disableTLS
+	settings.Duration = *duration
+	settings.Hostname = *hostname
+	settings.Port = *port
+	settings.SkipTLSVerify = *skipTLSVerify
+	clnt, err := nuvolari.NewClient(settings)
+	if err != nil {
+		log.Fatal(err)
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	sigs := make(chan os.Signal, 1)
@@ -60,20 +38,18 @@ func main() {
 	if runtime.GOOS != "windows" {
 		signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 		go func() {
-			<-sigs
-			fmt.Println("Got interrupt signal")
-			cancel()
-			fmt.Println("Delivered interrupt signal")
+			<-sigs   // Wait for a signal to appear
+			cancel() // Cancel pending download
 		}()
 	}
 	rv := 0
 	for ev := range clnt.Download(ctx) {
 		if ev.Key == nuvolari.FailureEvent {
-			rv = 1  // if we have seen an error be prepared to os.Exit(1)
+			rv = 1 // if we have seen an error be prepared to os.Exit(1)
 		}
 		data, err := json.Marshal(ev)
 		if err != nil {
-			panic("Cannot serialize event as JSON")
+			log.Fatal(err)
 		}
 		fmt.Println(string(data))
 	}
