@@ -164,7 +164,9 @@ func (cl Client) Download(ctx context.Context) chan Event {
 					IsLocal: true, Measurement: ndt7.Measurement{
 						Elapsed: t.Sub(t0).Nanoseconds(), NumBytes: count}}}
 			case <-ctx.Done():
-				running = false
+				ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogWarning,
+					Message: "Download interrupted by user"}}
+				return
 			default: // None of the above, receive more data
 				conn.SetReadDeadline(time.Now().Add(defaultTimeout))
 				mtype, mdata, err := conn.ReadMessage()
@@ -173,7 +175,7 @@ func (cl Client) Download(ctx context.Context) chan Event {
 						ch <- Event{Key: FailureEvent, Value: FailureRecord{
 							Failure: err.Error()}}
 					}
-					return
+					running = false
 				}
 				count += int64(len(mdata))
 				if mtype == websocket.TextMessage {
