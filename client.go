@@ -116,7 +116,6 @@ func (cl Client) Download(ctx context.Context) chan Event {
 						Elapsed: t.Sub(t0).Nanoseconds(), NumBytes: count}}}
 			case <-ctx.Done():
 				running = false
-				break
 			default: // None of the above, receive more data
 				conn.SetReadDeadline(time.Now().Add(defaultTimeout))
 				mtype, mdata, err := conn.ReadMessage()
