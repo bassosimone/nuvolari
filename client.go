@@ -125,7 +125,7 @@ type FailureRecord struct {
 }
 
 // defaultTimeout is the default value of the I/O timeout.
-const defaultTimeout = 1 * time.Second
+const defaultTimeout = 3 * time.Second
 
 // Download runs a NDT7 download test. The |ctx| context allows the caller
 // to interrupt the download early by cancelling the context.
