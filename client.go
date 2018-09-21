@@ -20,10 +20,10 @@ import (
 // to JSON and allows to configure a Client from bindings.
 type Settings struct {
 	DisableTLS    bool   `json:"disable_tls"`     // Whether to disable TLS
-	SkipTLSVerify bool   `json:"skip_tls_verify"` // Whether to skip TLS verification
+	Duration      int    `json:"duration"`        // Optional duration (seconds)
 	Hostname      string `json:"hostname"`        // Mandatory hostname
 	Port          string `json:"port"`            // Optional port
-	Duration      int    `json:"duration"`        // Optional duration (seconds)
+	SkipTLSVerify bool   `json:"skip_tls_verify"` // Whether to skip TLS verification
 }
 
 // Client is a NDT7 client.
