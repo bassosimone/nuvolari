@@ -203,8 +203,6 @@ func (cl Client) Download(ctx context.Context) chan Event {
 						Failure: err.Error()}}
 					return
 				}
-				ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogDebug,
-					Message: string(mdata)}}
 				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
 					IsLocal: false, Measurement: measurement}}
 			}
