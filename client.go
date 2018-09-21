@@ -19,20 +19,24 @@ import (
 // Settings contains the NDT7 Client settings. This structure is serializable
 // to JSON and allows to configure a Client from bindings.
 type Settings struct {
+	// Adaptive indicates whether the server is allowed to terminate the
+	// download early if BBR converges before the configured duration.
+	Adaptive bool `json:"adaptive"`
+
 	// DisableTLS indicates whether we should disable TLS.
-	DisableTLS    bool   `json:"disable_tls"`
+	DisableTLS bool `json:"disable_tls"`
 
 	// Duration indicates an optional duration expressed in seconds.
-	Duration      int    `json:"duration"`
+	Duration int `json:"duration"`
 
 	// Hostname is the hostname of the NDT7 server.
-	Hostname      string `json:"hostname"`
+	Hostname string `json:"hostname"`
 
 	// Port is the port of the NDT7 server.
-	Port          string `json:"port"`
+	Port string `json:"port"`
 
 	// SkipTLSVerify indicates whether we should skip TLS verify.
-	SkipTLSVerify bool   `json:"skip_tls_verify"`
+	SkipTLSVerify bool `json:"skip_tls_verify"`
 }
 
 // Client is a NDT7 client.
@@ -197,7 +201,7 @@ func (cl Client) Download(ctx context.Context) chan Event {
 					return
 				}
 				ch <- Event{Key: LogEvent, Value: LogRecord{LogLevel: LogDebug,
-									  Message: string(mdata)}}
+					Message: string(mdata)}}
 				ch <- Event{Key: MeasurementEvent, Value: MeasurementRecord{
 					IsLocal: false, Measurement: measurement}}
 			}
