@@ -82,11 +82,14 @@ func NewClient(settings Settings) (Client, error) {
 	} else {
 		clnt.URL.Host = settings.Hostname
 	}
+	query := clnt.URL.Query()
 	if settings.Duration > 0 {
-		query := clnt.URL.Query()
 		query.Add("duration", strconv.Itoa(settings.Duration))
-		clnt.URL.RawQuery = query.Encode()
 	}
+	if settings.Adaptive {
+		query.Add("adaptive", strconv.FormatBool(settings.Adaptive))
+	}
+	clnt.URL.RawQuery = query.Encode()
 	return clnt, nil
 }
 
