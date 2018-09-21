@@ -18,12 +18,15 @@
   version = "v1.4.0"
 
 [[projects]]
-  digest = "1:23700bafe5db71757ec72e09ee3afe7cdb4c2a82dc44a841d5a71659befcc5f2"
+  digest = "1:67cff31d3b99282b11f2893f805954b79e4bf7dc9a480f5318fef4392887c797"
   name = "github.com/m-lab/ndt-cloud"
-  packages = ["ndt7"]
+  packages = [
+    "bbr",
+    "ndt7",
+  ]
   pruneopts = "UT"
-  revision = "75fa28e3190bb9002557943abfc0aa3a321e011f"
-  version = "v0.4-beta"
+  revision = "15d4d334050c86503bf20fba776b5aa5d904c9b8"
+  version = "v0.4.0-beta.1"
 
 [[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
