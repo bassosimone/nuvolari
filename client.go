@@ -19,11 +19,20 @@ import (
 // Settings contains the NDT7 Client settings. This structure is serializable
 // to JSON and allows to configure a Client from bindings.
 type Settings struct {
-	DisableTLS    bool   `json:"disable_tls"`     // Whether to disable TLS
-	Duration      int    `json:"duration"`        // Optional duration (seconds)
-	Hostname      string `json:"hostname"`        // Mandatory hostname
-	Port          string `json:"port"`            // Optional port
-	SkipTLSVerify bool   `json:"skip_tls_verify"` // Whether to skip TLS verification
+	// DisableTLS indicates whether we should disable TLS.
+	DisableTLS    bool   `json:"disable_tls"`
+
+	// Duration indicates an optional duration expressed in seconds.
+	Duration      int    `json:"duration"`
+
+	// Hostname is the hostname of the NDT7 server.
+	Hostname      string `json:"hostname"`
+
+	// Port is the port of the NDT7 server.
+	Port          string `json:"port"`
+
+	// SkipTLSVerify indicates whether we should skip TLS verify.
+	SkipTLSVerify bool   `json:"skip_tls_verify"`
 }
 
 // Client is a NDT7 client.
