@@ -14,10 +14,11 @@ https://translate.google.com/#it/en/nuvola) in Italian. Also
 [Tazio Nuvolari](https://en.wikipedia.org/wiki/Tazio_Nuvolari) was a fast
 and brave Formula One driver in the late fourties and we aim for this
 implementation to be also fast to read and efficient. Also Nuvolari was
-_basso di statura_ (i.e. not so high) and also my surname means "not so high",
-hence the package name sounds perfect.
+_basso di statura_ (i.e. not so high) and also [@bassosimone](
+github.com/bassosimone)'s surname means "not so high" in Italian,
+hence the name sounds perfect.
 
-This is the package's anthem:
+This is the repository's anthem:
 
 [![Nuvolari](https://img.youtube.com/vi/56kHVXVQOb0/0.jpg)](
 https://www.youtube.com/watch?v=56kHVXVQOb0).
