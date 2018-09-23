@@ -1,12 +1,13 @@
 # Nuvolari
 
-Package nuvolari implements a NDTv7 client. NDTv7 is a non backwards
-compatible redesign of the NDT protocol. In particular we redesigned the
-NDT protocol (NDP) to work natively and only over WebSocket and TLS, so
-to remove the complexity induced by trying to be backward compatible with
+This repository contains several NDTv7 clients. NDTv7 is a non backwards
+compatible redesign of [the NDT protocol](
+https://github.com/ndt-project/ndt/wiki/NDTProtocol). In particular we
+redesigned the NDT protocol to work natively and only over WebSocket and TLS,
+so to remove the complexity induced by trying to be backward compatible with
 [NDT's original implementation](https://github.com/ndt-project/ndt).
 
-This package is called nuvolari because it is the companion package of
+This repository is called nuvolari because it is the companion package of
 the NDT7 server implementation, included in [m-lab/ndt-cloud](
 https://github.com/m-lab/ndt-cloud). You can [translate "cloud" to "nuvola"](
 https://translate.google.com/#it/en/nuvola) in Italian. Also
@@ -21,8 +22,8 @@ This is the package's anthem:
 [![Nuvolari](https://img.youtube.com/vi/56kHVXVQOb0/0.jpg)](
 https://www.youtube.com/watch?v=56kHVXVQOb0).
 
-This repository contains:
+This repository contains the following NDTv7 client implementations:
 
-- [a Go implementation](golang)
+- [a Go client implementation](golang);
 
-- [a JavaScript implementation](www)
+- [a JavaScript client implementation](www).
