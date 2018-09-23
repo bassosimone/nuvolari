@@ -20,3 +20,9 @@ This is the package's anthem:
 
 [![Nuvolari](https://img.youtube.com/vi/56kHVXVQOb0/0.jpg)](
 https://www.youtube.com/watch?v=56kHVXVQOb0).
+
+This repository contains:
+
+- [a Go implementation](golang)
+
+- [a JavaScript implementation](www)
