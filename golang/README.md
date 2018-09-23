@@ -6,4 +6,4 @@ This directory contains:
 
 - [a NDTv7 simple client](cmd/nuvolari-client);
 
-- [a NDTv7 simple server](cmd/nuvolari-server).
+- [a NDTv7 simple server](cmd/nuvolari-server) used for testing purposes.
