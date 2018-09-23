@@ -1,5 +1,5 @@
-// Package nuvolari implements a NDTv7 client.
-package nuvolari
+// Package ndt7client implements a NDTv7 client.
+package ndt7client
 
 import (
 	"context"

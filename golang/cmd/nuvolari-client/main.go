@@ -11,7 +11,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/bassosimone/nuvolari"
+	"github.com/bassosimone/nuvolari/golang/ndt7client"
 )
 
 var adaptive = flag.Bool("adaptive", false, "Enable adaptive test duration")
@@ -23,14 +23,14 @@ var skipTLSVerify = flag.Bool("skip-tls-verify", false, "Skip TLS verify")
 
 func main() {
 	flag.Parse()
-	settings := nuvolari.Settings{}
+	settings := ndt7client.Settings{}
 	settings.Adaptive = *adaptive
 	settings.DisableTLS = *disableTLS
 	settings.Duration = *duration
 	settings.Hostname = *hostname
 	settings.Port = *port
 	settings.SkipTLSVerify = *skipTLSVerify
-	clnt, err := nuvolari.NewClient(settings)
+	clnt, err := ndt7client.NewClient(settings)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -46,7 +46,7 @@ func main() {
 	}
 	rv := 0
 	for ev := range clnt.Download(ctx) {
-		if ev.Key == nuvolari.FailureEvent {
+		if ev.Key == ndt7client.FailureEvent {
 			rv = 1 // if we have seen an error be prepared to os.Exit(1)
 		}
 		data, err := json.Marshal(ev)
