@@ -8,8 +8,8 @@
 // jshint asi: true
 // jshint esversion: 6
 
-// libndt7client is a NDTv7 client library in JavaScript.
-const libndt7client = (function () {
+// ndt7client is a NDTv7 client library in JavaScript.
+const ndt7client = (function () {
   'use strict';
 
   // events groups all events

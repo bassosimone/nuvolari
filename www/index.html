@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <script type="text/javascript" src="libndt7client.js"></script>
+  <script type="text/javascript" src="ndt7client.js"></script>
   <meta charset="utf-8">
   <title>NDT7 Browser Client</title>
 </head>
@@ -9,7 +9,7 @@
   <button onclick="Run()">Run</button>
   <script type="text/javascript">
     function Run() {
-      let clnt = libndt7client.newClient({
+      let clnt = ndt7client.newClient({
         secure: (window.location.protocol === 'https:'),
         hostname: window.location.host,
         download: {
@@ -17,19 +17,19 @@
           adaptive: true
         }
       })
-      clnt.on(libndt7client.events.open, function (value) {
+      clnt.on(ndt7client.events.open, function (value) {
         console.log('Open: ' + JSON.stringify(value))
       })
-      clnt.on(libndt7client.events.close, function (value) {
+      clnt.on(ndt7client.events.close, function (value) {
         console.log('Close: ' + JSON.stringify(value))
       })
-      clnt.on(libndt7client.events.error, function (value) {
+      clnt.on(ndt7client.events.error, function (value) {
         console.log('Error: ' + JSON.stringify(value))
       })
-      clnt.on(libndt7client.events.downloadClient, function (value) {
+      clnt.on(ndt7client.events.downloadClient, function (value) {
         console.log('Measurement from us: ' + JSON.stringify(value))
       })
-      clnt.on(libndt7client.events.downloadServer, function (value) {
+      clnt.on(ndt7client.events.downloadServer, function (value) {
         console.log('Measurement from server: ' + JSON.stringify(value))
       })
       clnt.startDownload()
