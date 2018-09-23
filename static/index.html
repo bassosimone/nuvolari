@@ -1,36 +1,35 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <script type="text/javascript" src="libndt7client.js"></script>
   <meta charset="utf-8">
   <title>NDT7 Browser Client</title>
 </head>
 <body>
   <button onclick="Run()">Run</button>
-  <script>
-
+  <script type="text/javascript">
     function Run() {
-      let count = 0
-      let t0 = new Date().getTime()
-      let tlast = t0
-      const url = (((window.location.protocol === 'https:')
-        ? 'wss://' : 'ws://') + window.location.host + '/ndt/v7/download'
-        + '?duration=4')
-      const socket = new WebSocket(url, "net.measurementlab.ndt.v7")
-      socket.addEventListener('message', function (event) {
-        if (event.data instanceof Blob) {
-          count += event.data.size
-        } else {
-          console.log('Measurement from server: ' + event.data)
-          count += event.data.length
-        }
-        let t1 = new Date().getTime()
-        if (t1 - tlast > 250) {
-          console.log('Measurement from us: ' + JSON.stringify({
-            elapsed: (t1 - t0) * 1000 * 1000,
-            num_bytes: count,
-          }))
-          tlast = t1
-        }
+      let clnt = libndt7client.make()
+      clnt.on(libndt7client.events.open, function (value) {
+        console.log('Open: ' + JSON.stringify(value))
+      })
+      clnt.on(libndt7client.events.close, function (value) {
+        console.log('Close: ' + JSON.stringify(value))
+      })
+      clnt.on(libndt7client.events.error, function (value) {
+        console.log('Error: ' + JSON.stringify(value))
+      })
+      clnt.on(libndt7client.events.downloadClient, function (value) {
+        console.log('Measurement from us: ' + JSON.stringify(value))
+      })
+      clnt.on(libndt7client.events.downloadServer, function (value) {
+        console.log('Measurement from server: ' + JSON.stringify(value))
+      })
+      clnt.startDownload({
+        secure: (window.location.protocol === 'https:'),
+        hostname: window.location.host,
+        duration: 4,
+        adaptive: true
       })
     }
 
