@@ -9,7 +9,14 @@
   <button onclick="Run()">Run</button>
   <script type="text/javascript">
     function Run() {
-      let clnt = libndt7client.make()
+      let clnt = libndt7client.newClient({
+        secure: (window.location.protocol === 'https:'),
+        hostname: window.location.host,
+        download: {
+          duration: 4,
+          adaptive: true
+        }
+      })
       clnt.on(libndt7client.events.open, function (value) {
         console.log('Open: ' + JSON.stringify(value))
       })
@@ -25,12 +32,7 @@
       clnt.on(libndt7client.events.downloadServer, function (value) {
         console.log('Measurement from server: ' + JSON.stringify(value))
       })
-      clnt.startDownload({
-        secure: (window.location.protocol === 'https:'),
-        hostname: window.location.host,
-        duration: 4,
-        adaptive: true
-      })
+      clnt.startDownload()
     }
   </script>
 </body>

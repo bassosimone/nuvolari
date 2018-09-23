@@ -38,13 +38,13 @@ const libndt7client = (function () {
 
   return {
     // version is the client library version.
-    version: 0.1,
+    version: 0.2,
 
     // events exports the events table.
     events: events,
 
-    // make creates a new NDTv7 client.
-    make: function () {
+    // newClient creates a new NDTv7 client with |settings|.
+    newClient: function (settings) {
       let funcs = {}
 
       // emit emits the |value| event identified by |key|.
@@ -57,17 +57,17 @@ const libndt7client = (function () {
       // makequery creates the query string from |settings|.
       const makequery = function (settings) {
         let query = ''
-        if (settings.adaptive || settings.duration) {
+        if (settings.download.adaptive || settings.download.duration) {
           query += '?'
         }
-        if (settings.adaptive) {
+        if (settings.download.adaptive) {
           query += 'adaptive=true'
         }
-        if (settings.duration) {
+        if (settings.download.duration) {
           if (query) {
             query += '&'
           }
-          query += 'duration=' + settings.duration
+          query += 'duration=' + settings.download.duration
         }
         return query
       }
@@ -135,7 +135,7 @@ const libndt7client = (function () {
         },
 
         // startDownload starts the NDTv7 download.
-        startDownload: function (settings) {
+        startDownload: function () {
           measure(setupconn(settings))
         }
       }
