@@ -118,7 +118,7 @@ const ndt7client = (function () {
           const every = 250  // millisecond
           if (t1 - tlast > every) {
             emit(events.downloadClient, {
-              elapsed: (t1 - t0) * 1000 * 1000,  // nanosecond
+              elapsed: (t1 - t0) / 1000,  // second
               num_bytes: count,
             })
             tlast = t1
