@@ -8,7 +8,7 @@ so to remove the complexity induced by trying to be backward compatible with
 [NDT's original implementation](https://github.com/ndt-project/ndt).
 
 This repository is called nuvolari because it is the companion package of
-the NDT7 server implementation, included in [m-lab/ndt-cloud](
+the ndt7 server implementation, included in [m-lab/ndt-cloud](
 https://github.com/m-lab/ndt-cloud). You can [translate "cloud" to "nuvola"](
 https://translate.google.com/#it/en/nuvola) in Italian. Also
 [Tazio Nuvolari](https://en.wikipedia.org/wiki/Tazio_Nuvolari) was a fast

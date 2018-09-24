@@ -16,7 +16,7 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-// DownloadSettings contains NDT7 Client settings pertaining to the download.
+// DownloadSettings contains ndt7 Client settings pertaining to the download.
 type DownloadSettings struct {
 	// Adaptive indicates whether the server is allowed to terminate the
 	// download early if BBR converges before the configured duration.
@@ -26,15 +26,15 @@ type DownloadSettings struct {
 	Duration int
 }
 
-// Settings contains the NDT7 Client settings.
+// Settings contains the ndt7 Client settings.
 type Settings struct {
 	// DisableTLS indicates whether we should disable TLS.
 	DisableTLS bool
 
-	// Hostname is the hostname of the NDT7 server.
+	// Hostname is the hostname of the ndt7 server.
 	Hostname string
 
-	// Port is the port of the NDT7 server.
+	// Port is the port of the ndt7 server.
 	Port string
 
 	// SkipTLSVerify indicates whether we should skip TLS verify.
@@ -150,7 +150,7 @@ const minMaxMessageSize = 1 << 17
 // time, so that it's proper to stop the download from the client side.
 var ErrServerGoneWild = errors.New("Server is running for too much time")
 
-// RunDownload runs a NDT7 download test.
+// RunDownload runs a ndt7 download test.
 func (cl Client) RunDownload(ctx context.Context) error {
 	wsURL, err := cl.makeURL()
 	if err != nil {
