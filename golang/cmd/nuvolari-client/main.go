@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -21,18 +20,41 @@ var hostname = flag.String("hostname", "localhost", "Host to connect to")
 var port = flag.String("port", "", "Port to connect to")
 var skipTLSVerify = flag.Bool("skip-tls-verify", false, "Skip TLS verify")
 
+type myHandler struct {
+}
+
+func (myHandler) printMeasurement(s string, m ndt7client.Measurement) {
+	data, err := json.Marshal(m)
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("%s: %s\n", s, string(data))
+}
+
+func (myHandler) OnLogInfo(m string) {
+	log.Println(m)
+}
+
+func (mh myHandler) OnServerDownloadMeasurement(m ndt7client.Measurement) {
+	mh.printMeasurement("Server measurement", m)
+}
+
+func (mh myHandler) OnClientDownloadMeasurement(m ndt7client.Measurement) {
+	mh.printMeasurement("Client measurement", m)
+}
+
 func main() {
 	flag.Parse()
 	settings := ndt7client.Settings{}
-	settings.Adaptive = *adaptive
+	settings.Download.Adaptive = *adaptive
 	settings.DisableTLS = *disableTLS
-	settings.Duration = *duration
+	settings.Download.Duration = *duration
 	settings.Hostname = *hostname
 	settings.Port = *port
 	settings.SkipTLSVerify = *skipTLSVerify
-	clnt, err := ndt7client.NewClient(settings)
-	if err != nil {
-		log.Fatal(err)
+	clnt := ndt7client.Client{
+		Settings: settings,
+		Handler: myHandler{},
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	sigs := make(chan os.Signal, 1)
@@ -44,16 +66,8 @@ func main() {
 			cancel() // Cancel pending download
 		}()
 	}
-	rv := 0
-	for ev := range clnt.Download(ctx) {
-		if ev.Key == ndt7client.FailureEvent {
-			rv = 1 // if we have seen an error be prepared to os.Exit(1)
-		}
-		data, err := json.Marshal(ev)
-		if err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(string(data))
+	err := clnt.RunDownload(ctx)
+	if err != nil {
+		log.Fatal(err)
 	}
-	os.Exit(rv)
 }
