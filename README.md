@@ -1,4 +1,4 @@
-# Nuvolari
+# Nuvolari: a golang ndt7 client
 
 This repository contains a ndt7 client written in Go. ndt7 is a non backwards
 compatible redesign of [the NDT protocol](
