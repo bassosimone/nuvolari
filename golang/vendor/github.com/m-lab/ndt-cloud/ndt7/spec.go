@@ -95,37 +95,22 @@ const SecWebSocketProtocol = "net.measurementlab.ndt.v7"
 // threshold MUST always be accepted by an implementation.
 const MinMaxMessageSize = 1 << 17
 
-// Options are the options that can be configuered as part of the WebSocket
-// upgrade using the query string. If options are not provided, sensible
-// defaults SHOULD be selected by the server.
-type Options struct {
-	// Adaptive indicates whether we are allowed to stop the download early
-	// if it's safe to do so according to BBR instrumentation, because we have
-	// correctly estimated the available bandwidth.
-	Adaptive bool
-
-	// Duration is the expected duration (in seconds) of the subtest.
-	Duration int
-}
-
 // The BBRInfo struct contains information measured using BBR.
 type BBRInfo struct {
-	// Bandwidth is the bandwidth measured by BBR in bytes/s.
+	// Bandwidth is the bandwidth measured by BBR in bits per second.
 	Bandwidth float64 `json:"bandwidth"`
 
-	// RTT is the RTT measured by BBR in microseconds.
+	// RTT is the RTT measured by BBR in milliseconds.
 	RTT float64 `json:"rtt"`
 }
 
 // The Measurement struct contains measurement results. This structure is
 // meant to be serialised as JSON as sent on a textual message.
 type Measurement struct {
-	// Elapsed is the number of nanoseconds elapsed since the beginning
-	// of the subtest.
-	Elapsed int64 `json:"elapsed"`
+	// Elapsed is the number of seconds elapsed since the beginning.
+	Elapsed float64 `json:"elapsed"`
 
-	// NumBytes is the number of bytes transferred since the beginning
-	// of the subtest.
+	// NumBytes is the number of bytes transferred since the beginning.
 	NumBytes int64 `json:"num_bytes"`
 
 	// BBRInfo is the data measured using TCP BBR instrumentation.
