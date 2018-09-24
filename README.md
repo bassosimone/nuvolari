@@ -1,6 +1,6 @@
 # Nuvolari
 
-This repository contains several NDTv7 clients. NDTv7 is a non backwards
+This repository contains a NDTv7 written in Go. NDTv7 is a non backwards
 compatible redesign of [the NDT protocol](
 https://github.com/ndt-project/ndt/wiki/NDTProtocol). In particular we
 redesigned the NDT protocol to work natively and only over WebSocket and TLS,
@@ -23,8 +23,5 @@ This is the repository's anthem:
 [![Nuvolari](https://img.youtube.com/vi/56kHVXVQOb0/0.jpg)](
 https://www.youtube.com/watch?v=56kHVXVQOb0).
 
-This repository contains the following NDTv7 client implementations:
-
-- [a Go client implementation](golang);
-
-- [a JavaScript client implementation](www).
+The canonical NDTv7 server implementation is available at
+[github.com/m-lab/ndt-cloud](github.com/m-lab/ndt-cloud).
