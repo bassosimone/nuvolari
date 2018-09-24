@@ -1,4 +1,5 @@
-// Package nuvolari implements a NDTv7 client.
+// Package nuvolari implements a ndt7 client. The specification of ndt7 is
+// available at https://github.com/m-lab/ndt-cloud/blob/master/spec/ndt7.md.
 package nuvolari
 
 import (
