@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/bassosimone/nuvolari/golang/ndt7client"
+	"github.com/bassosimone/nuvolari/golang/nuvolari"
 )
 
 var adaptive = flag.Bool("adaptive", false, "Enable adaptive test duration")
@@ -23,7 +23,7 @@ var skipTLSVerify = flag.Bool("skip-tls-verify", false, "Skip TLS verify")
 type myHandler struct {
 }
 
-func (myHandler) printMeasurement(s string, m ndt7client.Measurement) {
+func (myHandler) printMeasurement(s string, m nuvolari.Measurement) {
 	data, err := json.Marshal(m)
 	if err != nil {
 		log.Fatal(err)
@@ -35,24 +35,24 @@ func (myHandler) OnLogInfo(m string) {
 	log.Println(m)
 }
 
-func (mh myHandler) OnServerDownloadMeasurement(m ndt7client.Measurement) {
+func (mh myHandler) OnServerDownloadMeasurement(m nuvolari.Measurement) {
 	mh.printMeasurement("Server measurement", m)
 }
 
-func (mh myHandler) OnClientDownloadMeasurement(m ndt7client.Measurement) {
+func (mh myHandler) OnClientDownloadMeasurement(m nuvolari.Measurement) {
 	mh.printMeasurement("Client measurement", m)
 }
 
 func main() {
 	flag.Parse()
-	settings := ndt7client.Settings{}
+	settings := nuvolari.Settings{}
 	settings.Download.Adaptive = *adaptive
 	settings.DisableTLS = *disableTLS
 	settings.Download.Duration = *duration
 	settings.Hostname = *hostname
 	settings.Port = *port
 	settings.SkipTLSVerify = *skipTLSVerify
-	clnt := ndt7client.Client{
+	clnt := nuvolari.Client{
 		Settings: settings,
 		Handler: myHandler{},
 	}
