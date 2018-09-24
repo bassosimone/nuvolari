@@ -1,6 +1,6 @@
 # Nuvolari
 
-This repository contains a ndt7 written in Go. ndt7 is a non backwards
+This repository contains a ndt7 client written in Go. ndt7 is a non backwards
 compatible redesign of [the NDT protocol](
 https://github.com/ndt-project/ndt/wiki/NDTProtocol). In particular we
 redesigned the NDT protocol to work natively and only over WebSocket and TLS,
@@ -23,5 +23,7 @@ This is the repository's anthem:
 [![Nuvolari](https://img.youtube.com/vi/56kHVXVQOb0/0.jpg)](
 https://www.youtube.com/watch?v=56kHVXVQOb0).
 
-The canonical ndt7 server implementation is available at
-[github.com/m-lab/ndt-cloud](github.com/m-lab/ndt-cloud).
+The canonical ndt7 server implementation and the ndt7 specification are
+available at [github.com/m-lab/ndt-cloud](github.com/m-lab/ndt-cloud).
+
+This implementation is compatible with v0.1.0 of the ndt7 spec.
