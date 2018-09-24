@@ -26,16 +26,8 @@
 
 
 [[constraint]]
-  name = "github.com/apex/log"
-  version = "1.0.0"
-
-[[constraint]]
   name = "github.com/gorilla/websocket"
   version = "1.2.0"
-
-[[constraint]]
-  name = "github.com/m-lab/ndt-cloud"
-  version = "0.4.0-beta"
 
 [prune]
   go-tests = true
