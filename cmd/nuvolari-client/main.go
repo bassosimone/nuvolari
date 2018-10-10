@@ -10,7 +10,7 @@ import (
 	"runtime"
 	"syscall"
 
-	"github.com/bassosimone/nuvolari/golang/nuvolari"
+	"github.com/bassosimone/nuvolari"
 )
 
 var adaptive = flag.Bool("adaptive", false, "Enable adaptive test duration")
