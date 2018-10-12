@@ -18,6 +18,7 @@ var disableTLS = flag.Bool("disable-tls", false, "Disable TLS")
 var duration = flag.Int("duration", 0, "Desired duration")
 var hostname = flag.String("hostname", "localhost", "Host to connect to")
 var port = flag.String("port", "", "Port to connect to")
+var scramble = flag.Bool("scramble", false, "Scramble plaintext HTTP with PSK")
 var skipTLSVerify = flag.Bool("skip-tls-verify", false, "Skip TLS verify")
 
 type myHandler struct {
@@ -51,6 +52,7 @@ func main() {
 	settings.Download.Duration = *duration
 	settings.Hostname = *hostname
 	settings.Port = *port
+	settings.Scramble = *scramble
 	settings.SkipTLSVerify = *skipTLSVerify
 	clnt := nuvolari.Client{
 		Settings: settings,

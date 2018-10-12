@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -42,6 +43,10 @@ type Settings struct {
 
 	// Download contains settings controlling the download.
 	Download DownloadSettings
+
+	// Scramble controls whether to turn on scrambling with PSK when
+	// DisableTLS is true.
+	Scramble bool
 }
 
 // BBRInfo contains BBR information.
@@ -127,11 +132,50 @@ func (cl Client) makeURL() (url.URL, error) {
 	return u, nil
 }
 
+type scrambleConn struct {
+	net.Conn
+}
+
+func newscrambleConn(conn net.Conn) net.Conn {
+	return scrambleConn{Conn: conn}
+}
+
+func (sconn scrambleConn) Read(b []byte) (int, error) {
+	n, e := sconn.Conn.Read(b)
+	if e != nil {
+		return 0, nil
+	}
+	for i := 0; i < n; i += 1 {
+		b[i] ^= 0x34
+	}
+	return n, nil
+}
+
+func (sconn scrambleConn) Write(b []byte) (int, error) {
+	c := make([]byte, len(b))
+	for i := 0; i < len(b); i += 1 {
+		c[i] = b[i] ^ 0x34
+	}
+	return sconn.Conn.Write(c)
+}
+
+func scrambleDial(network, addr string) (net.Conn, error) {
+	conn, err := net.Dial(network, addr)
+	if err != nil {
+		return nil, err
+	}
+	log.Print("SCRAMBLED CONN")
+	return newscrambleConn(conn), nil
+}
+
 func (cl Client) makeDialer() websocket.Dialer {
   var d websocket.Dialer
 	if cl.Settings.SkipTLSVerify {
 		config := tls.Config{InsecureSkipVerify: true}
 		d.TLSClientConfig = &config
+	}
+	if cl.Settings.DisableTLS && cl.Settings.Scramble {
+		d.NetDial = scrambleDial
 	}
 	return d
 }
