@@ -179,7 +179,7 @@ func (cl Client) RunDownload(ctx context.Context) error {
 	if duration <= 0 {
 		duration = defaultDuration
 	}
-	maxDuration := time.Duration(duration)*2*time.Second
+	maxDuration := float64(time.Duration(duration)*time.Second) * 1.5
 	for {
 		// Check whether the user interrupted us
 		select {
@@ -194,7 +194,7 @@ func (cl Client) RunDownload(ctx context.Context) error {
 		// Check whether we've run for too much time
 		now := time.Now()
 		elapsed := now.Sub(t0)
-		if elapsed >= maxDuration {
+		if float64(elapsed) >= maxDuration {
 			return ErrServerGoneWild
 		}
 		// Check whether it's time to run the next client-side measurement
