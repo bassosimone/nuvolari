@@ -138,7 +138,7 @@ func (cl Client) makeDialer() websocket.Dialer {
 
 const defaultDuration = 10
 
-const defaultTimeout = 3 * time.Second
+const defaultTimeout = 7 * time.Second
 
 const secWebSocketProtocol = "net.measurementlab.ndt.v7"
 
