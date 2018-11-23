@@ -46,11 +46,11 @@ type Settings struct {
 
 // BBRInfo contains BBR information.
 type BBRInfo struct {
-	// Bandwidth is the bandwidth measured in bits per second.
-	Bandwidth float64 `json:"bandwidth"`
+	// MaxBandwidth is the bandwidth measured in bits per second.
+	MaxBandwidth float64 `json:"max_bandwidth"`
 
-	// RTT is the round-trip time measured in milliseconds.
-	RTT float64 `json:"rtt"`
+	// MinRTT is the round-trip time measured in milliseconds.
+	MinRTT float64 `json:"min_rtt"`
 }
 
 // Measurement is a performance measurement.
