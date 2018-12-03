@@ -10,27 +10,13 @@ import (
 	"net"
 	"net/http"
 	"net/url"
-	"strconv"
 	"time"
 
 	"github.com/gorilla/websocket"
 )
 
-// DownloadSettings contains ndt7 Client settings pertaining to the download.
-type DownloadSettings struct {
-	// Adaptive indicates whether the server is allowed to terminate the
-	// download early if BBR converges before the configured duration.
-	Adaptive bool
-
-	// Duration indicates an optional duration expressed in seconds.
-	Duration int
-}
-
 // Settings contains the ndt7 Client settings.
 type Settings struct {
-	// DisableTLS indicates whether we should disable TLS.
-	DisableTLS bool
-
 	// Hostname is the hostname of the ndt7 server.
 	Hostname string
 
@@ -39,9 +25,6 @@ type Settings struct {
 
 	// SkipTLSVerify indicates whether we should skip TLS verify.
 	SkipTLSVerify bool
-
-	// Download contains settings controlling the download.
-	Download DownloadSettings
 }
 
 // BBRInfo contains BBR information.
@@ -57,9 +40,6 @@ type BBRInfo struct {
 type Measurement struct {
 	// Elapsed is the number of seconds elapsed since the beginning.
 	Elapsed float64 `json:"elapsed"`
-
-	// Bytes is the number of bytes transmitted since the beginning.
-	NumBytes int64 `json:"num_bytes"`
 
 	// BBRInfo is optional BBR information included when possible.
 	BBRInfo *BBRInfo `json:"bbr_info,omitempty"`
@@ -93,11 +73,7 @@ var ErrInvalidHostname = errors.New("Hostname is invalid")
 
 func (cl Client) makeURL() (url.URL, error) {
 	var u url.URL
-	if cl.Settings.DisableTLS {
-		u.Scheme = "ws"
-	} else {
-		u.Scheme = "wss"
-	}
+	u.Scheme = "wss"
 	if cl.Settings.Port != "" {
 		ip := net.ParseIP(cl.Settings.Hostname)
 		if ip == nil || ip.To4() != nil {
@@ -116,14 +92,6 @@ func (cl Client) makeURL() (url.URL, error) {
 		u.Host = cl.Settings.Hostname
 	}
 	u.Path = downloadURLPath
-	query := u.Query()
-	if cl.Settings.Download.Duration > 0 {
-		query.Add("duration", strconv.Itoa(cl.Settings.Download.Duration))
-	}
-	if cl.Settings.Download.Adaptive {
-		query.Add("adaptive", strconv.FormatBool(cl.Settings.Download.Adaptive))
-	}
-	u.RawQuery = query.Encode()
 	return u, nil
 }
 
@@ -175,11 +143,7 @@ func (cl Client) RunDownload(ctx context.Context) error {
 	t0 := time.Now()
 	tLast := t0
 	count := int64(0)
-	duration := cl.Settings.Download.Duration
-	if duration <= 0 {
-		duration = defaultDuration
-	}
-	maxDuration := float64(time.Duration(duration)*time.Second) * 1.5
+	maxDuration := float64(time.Duration(defaultDuration)*time.Second) * 1.5
 	for {
 		// Check whether the user interrupted us
 		select {
@@ -202,7 +166,6 @@ func (cl Client) RunDownload(ctx context.Context) error {
 			if cl.Handler != nil {
 				cl.Handler.OnClientDownloadMeasurement(Measurement{
 					Elapsed: elapsed.Seconds(),
-					NumBytes: count,
 				})
 			}
 			tLast = now
