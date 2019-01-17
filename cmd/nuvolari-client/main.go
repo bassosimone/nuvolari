@@ -60,7 +60,7 @@ func main() {
 			cancel() // Cancel pending download
 		}()
 	}
-	err := clnt.RunDownload(ctx)
+	err := clnt.RunUpload(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}

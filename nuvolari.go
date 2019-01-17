@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"net"
 	"net/http"
 	"net/url"
@@ -68,10 +69,12 @@ type Client struct {
 
 const downloadURLPath = "/ndt/v7/download"
 
+const uploadURLPath = "/ndt/v7/upload"
+
 // ErrInvalidHostname is returned when Settings.Hostname is invalid.
 var ErrInvalidHostname = errors.New("Hostname is invalid")
 
-func (cl Client) makeURL() (url.URL, error) {
+func (cl Client) makeURL(path string) (url.URL, error) {
 	var u url.URL
 	u.Scheme = "wss"
 	if cl.Settings.Port != "" {
@@ -91,7 +94,7 @@ func (cl Client) makeURL() (url.URL, error) {
 	} else {
 		u.Host = cl.Settings.Hostname
 	}
-	u.Path = downloadURLPath
+	u.Path = path
 	return u, nil
 }
 
@@ -120,7 +123,7 @@ var ErrServerGoneWild = errors.New("Server is running for too much time")
 
 // RunDownload runs a ndt7 download test.
 func (cl Client) RunDownload(ctx context.Context) error {
-	wsURL, err := cl.makeURL()
+	wsURL, err := cl.makeURL(downloadURLPath)
 	if err != nil {
 		return err
 	}
@@ -189,6 +192,76 @@ func (cl Client) RunDownload(ctx context.Context) error {
 			if cl.Handler != nil {
 				cl.Handler.OnServerDownloadMeasurement(measurement)
 			}
+		}
+	}
+	return nil
+}
+
+// makePreparedMessage generates a prepared message that should be sent
+// over the network for generating network load.
+func makePreparedMessage(size int) (*websocket.PreparedMessage, error) {
+	const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	data := make([]byte, size)
+	// This is not the fastest algorithm to generate a random string, yet it
+	// is most likely good enough for our purposes. See [1] for a comprehensive
+	// discussion regarding how to generate a random string in Golang.
+	//
+	// .. [1] https://stackoverflow.com/a/31832326/4354461
+	for i := range data {
+		data[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return websocket.NewPreparedMessage(websocket.BinaryMessage, data)
+}
+
+// RunUpload runs a ndt7 upload test.
+func (cl Client) RunUpload(ctx context.Context) error {
+	// TODO(bassosimone): factor out the duplicate code below
+	wsURL, err := cl.makeURL(uploadURLPath)
+	if err != nil {
+		return err
+	}
+	wsDialer := cl.makeDialer()
+	headers := http.Header{}
+	headers.Add("Sec-WebSocket-Protocol", secWebSocketProtocol)
+	wsDialer.HandshakeTimeout = defaultTimeout
+	if cl.Handler != nil {
+		cl.Handler.OnLogInfo("Connecting to: " + wsURL.String())
+	}
+	conn, _, err := wsDialer.Dial(wsURL.String(), headers)
+	if err != nil {
+		return err
+	}
+	conn.SetReadLimit(minMaxMessageSize)
+	defer conn.Close()
+	if cl.Handler != nil {
+		cl.Handler.OnLogInfo("Connection established")
+	}
+	t0 := time.Now()
+	maxDuration := float64(time.Duration(defaultDuration)*time.Second)
+	const bulkMessageSize = 1 << 13
+	preparedMessage, err := makePreparedMessage(bulkMessageSize)
+	if err != nil {
+		return err
+	}
+	for {
+		// Check whether the user interrupted us
+		select {
+		case <-ctx.Done():
+			if cl.Handler != nil {
+				cl.Handler.OnLogInfo("Upload interrupted by user")
+			}
+			return nil  // No error because user interrupted us
+		default:
+			break
+		}
+		// Check whether we've run for too much time
+		now := time.Now()
+		elapsed := now.Sub(t0)
+		if float64(elapsed) >= maxDuration {
+			break
+		}
+		if err := conn.WritePreparedMessage(preparedMessage); err != nil {
+			return err
 		}
 	}
 	return nil
