@@ -264,5 +264,11 @@ func (cl Client) RunUpload(ctx context.Context) error {
 			return err
 		}
 	}
-	return conn.Close()
+	err = conn.WriteMessage(
+		websocket.CloseMessage, websocket.FormatCloseMessage(1000, "woops"))
+	if err != nil {
+		return err
+	}
+	time.Sleep(time.Second)
+	return nil
 }
