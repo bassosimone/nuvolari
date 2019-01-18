@@ -264,5 +264,5 @@ func (cl Client) RunUpload(ctx context.Context) error {
 			return err
 		}
 	}
-	return nil
+	return conn.Close()
 }
